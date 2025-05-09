@@ -85,3 +85,56 @@
        role ENUM('guest','host','admin') NOT NULL,
        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
    );
+   CREATE TABLE Property (
+    property_id UUID PRIMARY KEY,
+    host_id UUID NOT NULL REFERENCES User(user_id),
+    name VARCHAR NOT NULL,
+    description TEXT NOT NULL,
+    pricepernight DECIMAL NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+   CREATE TABLE Location (
+       location_id SERIAL PRIMARY KEY,
+       property_id UUID NOT NULL REFERENCES Property(property_id),
+       street VARCHAR NOT NULL,
+       city VARCHAR NOT NULL,
+       state VARCHAR NOT NULL,
+       postal_code VARCHAR NOT NULL,
+       country VARCHAR NOT NULL,
+       UNIQUE(property_id)
+   );
+   CREATE TABLE Booking (
+       booking_id UUID PRIMARY KEY,
+       property_id UUID NOT NULL REFERENCES Property(property_id),
+       user_id UUID NOT NULL REFERENCES User(user_id),
+       start_date DATE NOT NULL,
+       end_date DATE NOT NULL,
+       total_price DECIMAL NOT NULL,
+       status ENUM('pending','confirmed','canceled') NOT NULL,
+       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       CHECK (end_date > start_date)
+   );
+   CREATE TABLE Payment (
+    payment_id UUID PRIMARY KEY,
+    booking_id UUID NOT NULL REFERENCES Booking(booking_id),
+    amount DECIMAL NOT NULL,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    payment_method ENUM('credit_card','paypal','stripe') NOT NULL
+
+   CREATE TABLE Review (
+       review_id UUID PRIMARY KEY,
+       property_id UUID NOT NULL REFERENCES Property(property_id),
+       user_id UUID NOT NULL REFERENCES User(user_id),
+       rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+       comment TEXT NOT NULL,
+       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+   );
+   CREATE TABLE Message (
+    message_id UUID PRIMARY KEY,
+    sender_id UUID NOT NULL REFERENCES User(user_id),
+    recipient_id UUID NOT NULL REFERENCES User(user_id),
+    message_body TEXT NOT NULL,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CHECK (sender_id != recipient_id)
+
