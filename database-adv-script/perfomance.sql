@@ -1,4 +1,3 @@
--- Initial complex query (before optimization)
 EXPLAIN ANALYZE
 SELECT 
     b.booking_id,
@@ -19,9 +18,9 @@ SELECT
 FROM bookings b
 JOIN users u ON b.user_id = u.user_id
 JOIN properties p ON b.property_id = p.property_id
-LEFT JOIN payments pay ON b.booking_id = pay.booking_id;
+LEFT JOIN payments pay ON b.booking_id = pay.booking_id
+WHERE b.status = 'confirmed' AND pay.payment_status = 'completed';
 
--- Optimized query (after analysis)
 EXPLAIN ANALYZE
 SELECT 
     b.booking_id,
@@ -42,13 +41,18 @@ FROM bookings b
 JOIN (
     SELECT user_id, username, email 
     FROM users
+    WHERE is_active = true
 ) u ON b.user_id = u.user_id
 JOIN (
     SELECT property_id, property_name, location, price_per_night
     FROM properties
+    WHERE is_available = true
 ) p ON b.property_id = p.property_id
 LEFT JOIN (
     SELECT booking_id, amount, payment_method, payment_status
     FROM payments
+    WHERE payment_status = 'completed'
 ) pay ON b.booking_id = pay.booking_id
-WHERE b.start_date > CURRENT_DATE - INTERVAL '1 year';
+WHERE b.status = 'confirmed' 
+  AND b.start_date > CURRENT_DATE - INTERVAL '1 year'
+  AND (pay.payment_id IS NOT NULL OR b.amount_paid > 0);
